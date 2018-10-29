@@ -26,7 +26,7 @@ let print_usage () =
      version, and the second is a command, which must be one of 'major', \
      'minor', and 'patch'. The updated version is output on stdout."
 
-let print_version (major, minor, patch) = printf "%i.%i.%i\n" major minor patch
+let print_version major minor patch = printf "%i.%i.%i\n" major minor patch
 
 let () =
   let open Option in
@@ -34,7 +34,7 @@ let () =
   let command = In_channel.input_line In_channel.stdin >>= parse_command in
   match (version, command) with
   | None, _ | _, None -> print_usage () ; exit 1
-  | Some (major, _, _), Some Major -> print_version (major + 1, 0, 0)
-  | Some (major, minor, _), Some Minor -> print_version (major, minor + 1, 0)
+  | Some (major, _, _), Some Major -> print_version (major + 1) 0 0
+  | Some (major, minor, _), Some Minor -> print_version major (minor + 1) 0
   | Some (major, minor, patch), Some Patch ->
-      print_version (major, minor, patch + 1)
+      print_version major minor (patch + 1)
