@@ -11,10 +11,10 @@ let parse_version line =
     | _ -> None
   with _ -> None
 
-let lowercase_and_strip = Fn.compose String.strip String.lowercase
+let lowercase_then_strip = Fn.compose String.strip String.lowercase
 
 let parse_command s =
-  match lowercase_and_strip s with
+  match lowercase_then_strip s with
   | "major" -> Some Major
   | "minor" -> Some Minor
   | "patch" -> Some Patch
@@ -22,16 +22,20 @@ let parse_command s =
 
 let print_usage () =
   print_endline
-    "Usage: bump_version expects two lines on stdin. The first is the current \
-     version, and the second is a command, which must be one of 'major', \
-     'minor', and 'patch'. The updated version is output on stdout."
+    "Usage: bump_version expects one command on stdin. The command must be \
+     major, minor, or patch. It will read the current version from the file \
+     named version, and write the new version to the same file."
 
-let print_version major minor patch = printf "%i.%i.%i\n" major minor patch
+let print_version major minor patch =
+  let new_version = sprintf "%i.%i.%i\n" major minor patch in
+  Out_channel.write_all "version" ~data:new_version
 
 let () =
   let open Option in
-  let version = In_channel.input_line In_channel.stdin >>= parse_version in
   let command = In_channel.input_line In_channel.stdin >>= parse_command in
+  let version =
+    In_channel.input_line (In_channel.create "version") >>= parse_version
+  in
   match (version, command) with
   | None, _ | _, None -> print_usage () ; exit 1
   | Some (major, _, _), Some Major -> print_version (major + 1) 0 0
